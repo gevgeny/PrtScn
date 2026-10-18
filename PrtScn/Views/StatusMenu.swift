@@ -1,11 +1,12 @@
 import AppKit
 import SwiftUI
 
-// Menu bar item. Opens MenuPanel in a borderless panel under the icon, using the macOS 27
-// expanded-interface API so the item highlights and tracks like a real menu.
-final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindowDelegate {
+// Menu bar item. Opens MenuPanel in a borderless panel under the icon. On macOS 27 via the
+// expanded-interface API (item highlights and tracks like a real menu); on 26 via a button click.
+final class StatusMenu: NSObject, NSWindowDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private var panel: KeyPanel?
+    private var closedAt = Date.distantPast
     private var aboutWindow: NSWindow?
 
     // For actions that report progress (OCR). One status menu per app.
@@ -14,7 +15,12 @@ final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindo
     override init() {
         super.init()
         Self.current = self
-        statusItem.expandedInterfaceDelegate = self
+        if #available(macOS 27, *) {
+            statusItem.expandedInterfaceDelegate = self
+        } else {
+            statusItem.button?.target = self
+            statusItem.button?.action = #selector(togglePanel)
+        }
         updateIcon()
         // Pause is stored in UserDefaults by the panel; keep the icon in sync.
         NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: UserDefaults.didChangeNotification, object: nil)
@@ -45,20 +51,23 @@ final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindo
             : KeyMonitor.paused ? .menuBarIconPaused : .menuBarIcon
     }
 
-    func statusItem(_ statusItem: NSStatusItem, didBegin session: NSStatusItemExpandedInterfaceSession) {
-        showPanel()
+    // macOS 26: the click that closes the panel (resign key) also hits the button; don't reopen right away.
+    @objc private func togglePanel() {
+        if panel == nil, Date().timeIntervalSince(closedAt) > 0.3 { showPanel() } else { close() }
     }
 
-    func statusItemDidEndExpandedInterfaceSession(_ statusItem: NSStatusItem, animated: Bool) {
+    fileprivate func hidePanel() {
         panel?.orderOut(nil)
         panel = nil
+        closedAt = Date()
+        statusItem.button?.highlight(false)
     }
 
     private func close() {
-        if let session = statusItem.expandedInterfaceSession { session.cancel() } else { panel?.orderOut(nil) }
+        if #available(macOS 27, *), let session = statusItem.expandedInterfaceSession { session.cancel() } else { hidePanel() }
     }
 
-    private func showPanel() {
+    fileprivate func showPanel() {
         guard let buttonFrame = statusItem.button?.window?.frame,
               let screen = statusItem.button?.window?.screen ?? NSScreen.main else { return }
         // Fresh content on every open, so state (bindings, login item) is current.
@@ -83,6 +92,7 @@ final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindo
         panel.contentView = host
         panel.makeKeyAndOrderFront(nil)
         self.panel = panel
+        statusItem.button?.highlight(true) // macOS 27 does this itself; harmless there.
     }
 
     // Click outside (or anywhere that takes key) closes, like a menu.
@@ -101,6 +111,17 @@ final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindo
         aboutWindow?.center()
         NSApp.activate()
         aboutWindow?.makeKeyAndOrderFront(nil)
+    }
+}
+
+@available(macOS 27, *)
+extension StatusMenu: NSStatusItemExpandedInterfaceDelegate {
+    func statusItem(_ statusItem: NSStatusItem, didBegin session: NSStatusItemExpandedInterfaceSession) {
+        showPanel()
+    }
+
+    func statusItemDidEndExpandedInterfaceSession(_ statusItem: NSStatusItem, animated: Bool) {
+        hidePanel()
     }
 }
 
