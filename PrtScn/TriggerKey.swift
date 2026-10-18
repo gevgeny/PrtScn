@@ -1,0 +1,106 @@
+import AppKit
+
+enum TriggerKey: String, CaseIterable, Identifiable {
+    // Raw values are persisted IDs.
+    case fn = "Fn", ctrl = "Ctrl", opt = "Opt", cmd = "Cmd", shift = "Shift"
+    case rightCtrl = "R Ctrl", rightOpt = "R Opt", rightCmd = "R Cmd", rightShift = "R Shift"
+    var id: Self { self }
+
+    static let fnKeyCode: UInt16 = 0x3F
+
+    init?(keyCode: UInt16) {
+        switch keyCode {
+        case Self.fnKeyCode: self = .fn
+        case 0x3A: self = .opt
+        case 0x3D: self = .rightOpt
+        case 0x3B: self = .ctrl
+        case 0x3E: self = .rightCtrl
+        case 0x37: self = .cmd
+        case 0x36: self = .rightCmd
+        case 0x38: self = .shift
+        case 0x3C: self = .rightShift
+        default: return nil
+        }
+    }
+
+    var family: NSEvent.ModifierFlags {
+        switch self {
+        case .fn: .function
+        case .opt, .rightOpt: .option
+        case .ctrl, .rightCtrl: .control
+        case .cmd, .rightCmd: .command
+        case .shift, .rightShift: .shift
+        }
+    }
+
+    // Device-dependent bits (NX_DEVICE*KEYMASK) tell left from right.
+    var deviceMask: UInt {
+        switch self {
+        case .fn: NSEvent.ModifierFlags.function.rawValue
+        case .opt: 0x20
+        case .rightOpt: 0x40
+        case .ctrl: 0x01
+        case .rightCtrl: 0x2000
+        case .cmd: 0x08
+        case .rightCmd: 0x10
+        case .shift: 0x02
+        case .rightShift: 0x04
+        }
+    }
+}
+
+// Key -> action assignments, persisted.
+enum Bindings {
+    static var all: [TriggerKey: Action] {
+        get {
+            let raw = UserDefaults.standard.dictionary(forKey: "bindings") as? [String: String] ?? [:]
+            return Dictionary(uniqueKeysWithValues: raw.compactMap { k, v in
+                TriggerKey(rawValue: k).flatMap { key in Action(rawValue: v).map { (key, $0) } }
+            })
+        }
+        set {
+            UserDefaults.standard.set(Dictionary(uniqueKeysWithValues: newValue.map { ($0.rawValue, $1.rawValue) }), forKey: "bindings")
+        }
+    }
+}
+
+extension TriggerKey {
+    var symbol: String {
+        switch self {
+        case .fn: "fn"
+        case .ctrl: "Lt ⌃"
+        case .opt: "Lt ⌥"
+        case .cmd: "Lt ⌘"
+        case .shift: "Lt ⇧"
+        case .rightCtrl: "Rt ⌃"
+        case .rightOpt: "Rt ⌥"
+        case .rightCmd: "Rt ⌘"
+        case .rightShift: "Rt ⇧"
+        }
+    }
+
+    // Outlined key cap; template so it follows the menu's text color.
+    var badge: NSImage {
+        let image = NSImage(size: NSSize(width: 40, height: 20), flipped: false) { rect in
+            NSColor.black.set()
+            NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 5, yRadius: 5).stroke()
+            let text = NSAttributedString(string: symbol, attributes: [.font: NSFont.systemFont(ofSize: 11, weight: .semibold)])
+            let size = text.size()
+            // Globe key: SF Symbol, not 🌐 emoji (a color emoji turns into a blob in a template image).
+            let globe = self == .fn
+                ? NSImage(systemSymbolName: "globe", accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: 10, weight: .semibold))
+                : nil
+            let globeWidth = globe.map { $0.size.width + 3 } ?? 0
+            var x = (rect.width - globeWidth - size.width) / 2
+            if let globe {
+                globe.draw(in: NSRect(x: x, y: (rect.height - globe.size.height) / 2, width: globe.size.width, height: globe.size.height))
+                x += globeWidth
+            }
+            text.draw(at: NSPoint(x: x, y: (rect.height - size.height) / 2))
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+}

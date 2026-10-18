@@ -100,43 +100,14 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     }
 }
 
-extension TriggerKey {
-    var symbol: String {
-        switch self {
-        case .fn: "fn"
-        case .ctrl: "Lt ⌃"
-        case .opt: "Lt ⌥"
-        case .cmd: "Lt ⌘"
-        case .shift: "Lt ⇧"
-        case .rightCtrl: "Rt ⌃"
-        case .rightOpt: "Rt ⌥"
-        case .rightCmd: "Rt ⌘"
-        case .rightShift: "Rt ⇧"
-        }
-    }
-
-    // Outlined key cap; template so it follows the menu's text color.
-    var badge: NSImage {
-        let image = NSImage(size: NSSize(width: 40, height: 20), flipped: false) { rect in
-            NSColor.black.set()
-            NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 5, yRadius: 5).stroke()
-            let text = NSAttributedString(string: symbol, attributes: [.font: NSFont.systemFont(ofSize: 11, weight: .semibold)])
-            let size = text.size()
-            // Globe key: SF Symbol, not 🌐 emoji (a color emoji turns into a blob in a template image).
-            let globe = self == .fn
-                ? NSImage(systemSymbolName: "globe", accessibilityDescription: nil)?
-                    .withSymbolConfiguration(.init(pointSize: 10, weight: .semibold))
-                : nil
-            let globeWidth = globe.map { $0.size.width + 3 } ?? 0
-            var x = (rect.width - globeWidth - size.width) / 2
-            if let globe {
-                globe.draw(in: NSRect(x: x, y: (rect.height - globe.size.height) / 2, width: globe.size.width, height: globe.size.height))
-                x += globeWidth
-            }
-            text.draw(at: NSPoint(x: x, y: (rect.height - size.height) / 2))
+extension NSImage {
+    // Template images render by alpha, so a faded copy shows grey like a disabled item in light and dark.
+    static let menuBarIconPaused: NSImage = {
+        let image = NSImage(size: menuBarIcon.size, flipped: false) { rect in
+            menuBarIcon.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.35)
             return true
         }
         image.isTemplate = true
         return image
-    }
+    }()
 }
