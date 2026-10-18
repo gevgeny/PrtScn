@@ -8,7 +8,6 @@
 import AppKit
 import IOKit.hid
 import ServiceManagement
-import SwiftUI
 
 enum Action: String, CaseIterable {
     // Raw value (case name) is the persisted ID; title is display-only.
@@ -189,28 +188,16 @@ enum KeyMonitor {
 }
 
 @main
-struct PrtScnApp: App {
-    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
-    @AppStorage("paused") private var paused = false
-
-    var body: some Scene {
-        MenuBarExtra {
-            MenuView()
-        } label: {
-            Image(nsImage: paused ? .menuBarIconPaused : .menuBarIcon)
-        }
-
-        Window("About PrtScn", id: "about") {
-            AboutView()
-        }
-        .windowResizability(.contentSize)
-        .defaultLaunchBehavior(.suppressed)
-    }
-}
-
-// Start monitoring only after launch: installing it in App.init (before the app finished
-// launching) left the menu bar panel without mouse events.
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    static let shared = AppDelegate()
+    private var statusMenu: StatusMenu?
+
+    static func main() {
+        NSApplication.shared.delegate = shared
+        NSApplication.shared.run()
+    }
+
+    // Start monitoring only after launch: installing it earlier left our own menus without mouse events.
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("[PrtScn] launched, login status=\(SMAppService.mainApp.status.rawValue)")
         // Single instance: newest wins, so a fresh launch (or Xcode rerun) replaces a stale copy.
@@ -219,6 +206,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             print("[PrtScn] quitting other instance pid=\(app.processIdentifier)")
             app.terminate()
         }
+        statusMenu = StatusMenu()
         KeyMonitor.start()
     }
 }
