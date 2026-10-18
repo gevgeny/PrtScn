@@ -110,7 +110,7 @@ enum Bindings {
 // no other modifier held, no key/mouse/scroll in between, system key-down counter unchanged.
 // Listen-only, so shortcuts that use these keys keep working.
 enum KeyMonitor {
-    static var paused = false
+    static var paused: Bool { UserDefaults.standard.bool(forKey: "paused") }
     static var pressed: TriggerKey?
     static var keyDownsAtPress: UInt32 = 0
     static var hid: IOHIDManager?
@@ -191,95 +191,50 @@ enum KeyMonitor {
     }
 }
 
-// Action × key matrix. One action per key.
-struct KeyMatrix: View {
-    @State var assignment = Bindings.all
+@main
+struct PrtScnApp: App {
+    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    @AppStorage("paused") private var paused = false
 
-    var body: some View {
-        Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 8) {
-            GridRow {
-                Text("Press a key once to capture")
-                ForEach(TriggerKey.allCases) { Text($0.rawValue).gridColumnAlignment(.center) }
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.secondary)
-            ForEach(Action.allCases, id: \.self) { action in
-                GridRow {
-                    Text(action.rawValue).padding(.trailing, 16)
-                    ForEach(TriggerKey.allCases) { key in
-                        let on = assignment[key] == action
-                        Button { assignment[key] = on ? nil : action } label: {
-                            Text(on ? key.glyph : "")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 44, height: 26)
-                                .background(on ? Color.accentColor : .clear, in: .rect(cornerRadius: 6))
-                                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(on ? .clear : .secondary.opacity(0.5)))
-                                .contentShape(.rect)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
+    var body: some Scene {
+        MenuBarExtra {
+            MenuView()
+        } label: {
+            Image(nsImage: paused ? .menuBarIconPaused : .menuBarIcon)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .onChange(of: assignment) { _, new in
-            print("[PrtScn] bindings -> \(new)")
-            Bindings.all = new
+        .menuBarExtraStyle(.window)
+
+        Window("About PrtScn", id: "about") {
+            AboutView()
         }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
     }
 }
 
-@main
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    static let shared = AppDelegate()
-    let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-    let loginItem = NSMenuItem(title: "Launch at login", action: #selector(toggleLogin), keyEquivalent: "")
-    let pauseItem = NSMenuItem(title: "Pause PrtScn", action: #selector(togglePause), keyEquivalent: "")
-
-    static func main() {
-        NSApplication.shared.delegate = shared
-        NSApplication.shared.run()
-    }
-
+// Start monitoring only after launch: installing it in App.init (before the app finished
+// launching) left the menu bar panel without mouse events.
+final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("[PrtScn] launched, login status=\(SMAppService.mainApp.status.rawValue)")
-        statusItem.button?.image = NSImage(named: "MenuBarIcon")
-
-        let host = NSHostingView(rootView: KeyMatrix())
-        host.frame.size = host.fittingSize
-        let matrixItem = NSMenuItem()
-        matrixItem.view = host
-
-        let menu = NSMenu()
-        menu.delegate = self
-        menu.addItem(matrixItem)
-        menu.addItem(.separator())
-        pauseItem.target = self
-        menu.addItem(pauseItem)
-        loginItem.target = self
-        menu.addItem(loginItem)
-        menu.addItem(NSMenuItem(title: "Quit PrtScn", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-        statusItem.menu = menu
+        // Single instance: newest wins, so a fresh launch (or Xcode rerun) replaces a stale copy.
+        for app in NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+        where app != .current {
+            print("[PrtScn] quitting other instance pid=\(app.processIdentifier)")
+            app.terminate()
+        }
         KeyMonitor.start()
     }
+}
 
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
-    }
-
-    @objc func togglePause() {
-        KeyMonitor.paused.toggle()
-        pauseItem.title = KeyMonitor.paused ? "Resume PrtScn" : "Pause PrtScn"
-        statusItem.button?.appearsDisabled = KeyMonitor.paused
-        print("[PrtScn] paused=\(KeyMonitor.paused)")
-    }
-
-    @objc func toggleLogin() {
-        let on = SMAppService.mainApp.status != .enabled
-        print("[PrtScn] launchAtLogin -> \(on)")
-        do { try on ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister() }
-        catch { print("[PrtScn] login item failed: \(error)") }
-    }
+extension NSImage {
+    // Template images render by alpha, so a faded copy shows grey like a disabled item in light and dark.
+    static let menuBarIconPaused: NSImage = {
+        let image = NSImage(size: menuBarIcon.size, flipped: false) { rect in
+            menuBarIcon.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.35)
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }()
 }
