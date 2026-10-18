@@ -24,17 +24,20 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let bindings = Bindings.all
+        // Header + arrow so rows read as key -> action settings, not commands.
+        menu.addItem(.sectionHeader(title: "Tap a key to capture"))
         for key in TriggerKey.allCases {
             let item = NSMenuItem(title: bindings[key]?.title ?? "Not set", action: nil, keyEquivalent: "")
             item.image = key.badge
             // macOS 27 hides menu item images unless asked.
             item.preferredImageVisibility = .visible
-            if bindings[key] == nil {
-                item.attributedTitle = NSAttributedString(string: "Not set", attributes: [
-                    .foregroundColor: NSColor.secondaryLabelColor,
-                    .font: NSFont.menuFont(ofSize: 0),
-                ])
-            }
+            let font = NSFont.menuFont(ofSize: 0)
+            let title = NSMutableAttributedString(string: "→  ", attributes: [.foregroundColor: NSColor.tertiaryLabelColor, .font: font])
+            title.append(NSAttributedString(string: bindings[key]?.title ?? "Not set", attributes: [
+                .foregroundColor: bindings[key] == nil ? NSColor.secondaryLabelColor : NSColor.labelColor,
+                .font: font,
+            ]))
+            item.attributedTitle = title
             let submenu = NSMenu()
             for action in Action.allCases.map(Optional.some) + [nil] {
                 let choice = NSMenuItem(title: action?.title ?? "None", action: #selector(pick(_:)), keyEquivalent: "")
