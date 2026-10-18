@@ -11,11 +11,18 @@ import ServiceManagement
 import SwiftUI
 
 enum Action: String, CaseIterable {
-    case screenFile = "Save picture of screen as a file"
-    case screenClipboard = "Copy picture of screen to the clipboard"
-    case areaFile = "Save picture of selected area as a file"
-    case areaClipboard = "Copy picture of selected area to the clipboard"
-    case options = "Screenshot and recording options"
+    // Raw value (case name) is the persisted ID; title is display-only.
+    case screenFile, screenClipboard, areaFile, areaClipboard, options
+
+    var title: String {
+        switch self {
+        case .screenFile: "Capture screen to file"
+        case .screenClipboard: "Capture screen to clipboard"
+        case .areaFile: "Capture area to file"
+        case .areaClipboard: "Capture area to clipboard"
+        case .options: "Record"
+        }
+    }
 
     func run() {
         print("[PrtScn] run \(self)")
@@ -47,7 +54,7 @@ enum Action: String, CaseIterable {
 }
 
 enum TriggerKey: String, CaseIterable, Identifiable {
-    case fn = "Fn", opt = "Opt", rightOpt = "R Opt", ctrl = "Ctrl", rightCtrl = "R Ctrl"
+    case fn = "Fn", ctrl = "Ctrl", opt = "Opt", rightCtrl = "R Ctrl", rightOpt = "R Opt"
     var id: Self { self }
 
     init?(keyCode: UInt16) {
@@ -58,14 +65,6 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         case 0x3B: self = .ctrl
         case 0x3E: self = .rightCtrl
         default: return nil
-        }
-    }
-
-    var glyph: String {
-        switch self {
-        case .fn: "fn"
-        case .opt, .rightOpt: "⌥"
-        case .ctrl, .rightCtrl: "⌃"
         }
     }
 
@@ -93,9 +92,7 @@ enum TriggerKey: String, CaseIterable, Identifiable {
 enum Bindings {
     static var all: [TriggerKey: Action] {
         get {
-            guard let raw = UserDefaults.standard.dictionary(forKey: "bindings") as? [String: String] else {
-                return [.fn: .areaClipboard]
-            }
+            let raw = UserDefaults.standard.dictionary(forKey: "bindings") as? [String: String] ?? [:]
             return Dictionary(uniqueKeysWithValues: raw.compactMap { k, v in
                 TriggerKey(rawValue: k).flatMap { key in Action(rawValue: v).map { (key, $0) } }
             })
@@ -202,7 +199,6 @@ struct PrtScnApp: App {
         } label: {
             Image(nsImage: paused ? .menuBarIconPaused : .menuBarIcon)
         }
-        .menuBarExtraStyle(.window)
 
         Window("About PrtScn", id: "about") {
             AboutView()
