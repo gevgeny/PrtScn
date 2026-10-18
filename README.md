@@ -18,8 +18,7 @@
 <p align="center">
   <a href="./builds/PrtScn.0.1.0.zip"><strong>Download v0.1.0</strong></a> ·
   <a href="#features">Features</a> ·
-  <a href="#installation">Installation</a> ·
-  <a href="#building-from-source">Build</a>
+  <a href="#permissions">Permissions</a>
 </p>
 
 ---
@@ -44,21 +43,12 @@ Only a clean single press counts. Holding the key with anything else (another ke
 - **Pause** without quitting
 - **Launch at login**
 
-## Installation
+## Permissions
 
-1. Download [**PrtScn v0.1.0**](./builds/PrtScn.0.1.0.zip) and unzip it. The app is signed with a Developer ID and notarized by Apple. Older builds are in [`builds`](./builds).
-2. Move **PrtScn.app** to `/Applications` and launch it. The icon appears in the menu bar.
-3. Allow PrtScn in **Privacy & Security → Accessibility** and **Input Monitoring**, then restart it.
-4. Allow **Screen Recording** when macOS asks on the first screenshot.
-5. Click the icon and pick an action for each key you want to use.
-6. If you use Fn, set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
+| Permission | Why |
+|---|---|
+| **Accessibility** | Watch for single key presses |
+| **Input Monitoring** | Read the 🌐 fn key |
+| **Screen Recording** | Take screenshots; macOS asks on the first capture |
 
-## Building from source
-
-Requires Xcode 27 (the app icon is an Icon Composer `.icon` file). No dependencies.
-
-```sh
-git clone https://github.com/gevgeny/PrtScn.git
-cd PrtScn
-open PrtScn.xcodeproj   # build & run the "PrtScn" scheme
-```
+Grant them in **System Settings → Privacy & Security**, then restart PrtScn. If you use fn, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
