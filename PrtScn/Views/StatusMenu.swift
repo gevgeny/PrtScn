@@ -106,8 +106,12 @@ extension TriggerKey {
         case .fn: "fn"
         case .ctrl: "Lt ⌃"
         case .opt: "Lt ⌥"
+        case .cmd: "Lt ⌘"
+        case .shift: "Lt ⇧"
         case .rightCtrl: "Rt ⌃"
         case .rightOpt: "Rt ⌥"
+        case .rightCmd: "Rt ⌘"
+        case .rightShift: "Rt ⇧"
         }
     }
 

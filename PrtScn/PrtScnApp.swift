@@ -53,7 +53,9 @@ enum Action: String, CaseIterable {
 }
 
 enum TriggerKey: String, CaseIterable, Identifiable {
-    case fn = "Fn", ctrl = "Ctrl", opt = "Opt", rightCtrl = "R Ctrl", rightOpt = "R Opt"
+    // Raw values are persisted IDs.
+    case fn = "Fn", ctrl = "Ctrl", opt = "Opt", cmd = "Cmd", shift = "Shift"
+    case rightCtrl = "R Ctrl", rightOpt = "R Opt", rightCmd = "R Cmd", rightShift = "R Shift"
     var id: Self { self }
 
     init?(keyCode: UInt16) {
@@ -63,6 +65,10 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         case 0x3D: self = .rightOpt
         case 0x3B: self = .ctrl
         case 0x3E: self = .rightCtrl
+        case 0x37: self = .cmd
+        case 0x36: self = .rightCmd
+        case 0x38: self = .shift
+        case 0x3C: self = .rightShift
         default: return nil
         }
     }
@@ -72,6 +78,8 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         case .fn: .function
         case .opt, .rightOpt: .option
         case .ctrl, .rightCtrl: .control
+        case .cmd, .rightCmd: .command
+        case .shift, .rightShift: .shift
         }
     }
 
@@ -83,6 +91,10 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         case .rightOpt: 0x40
         case .ctrl: 0x01
         case .rightCtrl: 0x2000
+        case .cmd: 0x08
+        case .rightCmd: 0x10
+        case .shift: 0x02
+        case .rightShift: 0x04
         }
     }
 }
@@ -109,6 +121,9 @@ enum KeyMonitor {
     static var paused: Bool { UserDefaults.standard.bool(forKey: "paused") }
     static var pressed: TriggerKey?
     static var keyDownsAtPress: UInt32 = 0
+    static var pressedAt: TimeInterval = 0
+    // Held longer than this = changed mind, no action (Karabiner's to_if_alone default).
+    static let timeout: TimeInterval = 1.0
     static var hid: IOHIDManager?
     static var globeDown = false
 
@@ -123,7 +138,7 @@ enum KeyMonitor {
             }
             // Fn comes from HID when available; its flagsChanged may be suppressed or duplicated.
             if e.keyCode == 0x3F && hid != nil { return }
-            guard let key = TriggerKey(keyCode: e.keyCode) else { pressed = nil; return } // Cmd, Shift, Caps...
+            guard let key = TriggerKey(keyCode: e.keyCode) else { pressed = nil; return } // Caps Lock etc.
             changed(key, down: e.modifierFlags.rawValue & key.deviceMask != 0, flags: e.modifierFlags)
         }
         startGlobe()
@@ -134,10 +149,11 @@ enum KeyMonitor {
             let others = flags.intersection([.command, .option, .control, .shift, .function]).subtracting(key.family)
             pressed = pressed == nil && others.isEmpty ? key : nil
             keyDownsAtPress = keyDowns()
+            pressedAt = ProcessInfo.processInfo.systemUptime
             print("[PrtScn] \(key) down, armed=\(pressed != nil)")
         } else if pressed == key {
             pressed = nil
-            let clean = keyDowns() == keyDownsAtPress
+            let clean = keyDowns() == keyDownsAtPress && ProcessInfo.processInfo.systemUptime - pressedAt < timeout
             let action = Bindings.all[key]
             print("[PrtScn] \(key) up, clean=\(clean) paused=\(paused) action=\(String(describing: action))")
             if clean, !paused, let action { action.run() }
