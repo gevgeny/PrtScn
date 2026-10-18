@@ -73,10 +73,8 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             menu.addItem(item)
         }
         menu.addItem(.separator())
-        menu.addItem(item(KeyMonitor.paused ? "Resume" : "Pause", #selector(togglePause)))
-        let login = item("Launch at login", #selector(toggleLogin))
-        if SMAppService.mainApp.status == .enabled { login.badge = NSMenuItemBadge(string: "✓") }
-        menu.addItem(login)
+        menu.addItem(toggle("Pause", symbol: "pause.fill", on: KeyMonitor.paused, #selector(togglePause)))
+        menu.addItem(toggle("Launch at login", symbol: "power", on: SMAppService.mainApp.status == .enabled, #selector(toggleLogin)))
         menu.addItem(.separator())
         menu.addItem(item("About PrtScn", #selector(showAbout)))
         menu.addItem(NSMenuItem(title: "Quit PrtScn", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
@@ -85,6 +83,25 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     private func item(_ title: String, _ action: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = self
+        return item
+    }
+
+    // Control Center style toggle: symbol in a circle, accent-filled when on.
+    private func toggle(_ title: String, symbol: String, on: Bool, _ action: Selector) -> NSMenuItem {
+        let item = item(title, action)
+        item.image = NSImage(size: NSSize(width: 26, height: 26), flipped: false) { rect in
+            // Drawn at display time, so the dynamic colors follow light/dark.
+            (on ? NSColor.controlAccentColor : NSColor.quaternaryLabelColor).setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+                .applying(.init(paletteColors: [on ? .white : .labelColor]))
+            if let glyph = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config) {
+                glyph.draw(in: NSRect(x: (rect.width - glyph.size.width) / 2, y: (rect.height - glyph.size.height) / 2,
+                                      width: glyph.size.width, height: glyph.size.height))
+            }
+            return true
+        }
+        item.preferredImageVisibility = .visible
         return item
     }
 
