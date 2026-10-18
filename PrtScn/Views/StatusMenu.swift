@@ -18,6 +18,7 @@ final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindo
         updateIcon()
         // Pause is stored in UserDefaults by the panel; keep the icon in sync.
         NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: UserDefaults.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: KeyMonitor.stateChanged, object: nil)
     }
 
     // Pulses the menu bar icon while a slow action runs.
@@ -40,7 +41,8 @@ final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindo
     }
 
     @objc private func updateIcon() {
-        statusItem.button?.image = KeyMonitor.paused ? .menuBarIconPaused : .menuBarIcon
+        statusItem.button?.image = KeyMonitor.waitingForPermission ? .menuBarIconWarning
+            : KeyMonitor.paused ? .menuBarIconPaused : .menuBarIcon
     }
 
     func statusItem(_ statusItem: NSStatusItem, didBegin session: NSStatusItemExpandedInterfaceSession) {
@@ -118,5 +120,23 @@ extension NSImage {
         }
         image.isTemplate = true
         return image
+    }()
+
+    // Dimmed icon with a red dot, like Babbler: a permission is missing.
+    static let menuBarIconWarning: NSImage = {
+        let dotSize: CGFloat = 6
+        let overhang: CGFloat = 2 // Dot sticks out right/up; padded on both sides to keep the icon centred.
+        let base = menuBarIcon
+        let size = NSSize(width: base.size.width + overhang * 2, height: base.size.height + overhang * 2)
+        return NSImage(size: size, flipped: false) { _ in
+            let baseRect = NSRect(origin: NSPoint(x: overhang, y: overhang), size: base.size)
+            base.draw(in: baseRect, from: .zero, operation: .sourceOver, fraction: 0.35)
+            // Not a template (the dot must stay red), so tint the base by hand; drawn per appearance.
+            NSColor.labelColor.set()
+            baseRect.fill(using: .sourceAtop)
+            NSColor.systemRed.setFill()
+            NSBezierPath(ovalIn: NSRect(x: baseRect.maxX - dotSize + overhang, y: size.height - dotSize, width: dotSize, height: dotSize)).fill()
+            return true
+        }
     }()
 }

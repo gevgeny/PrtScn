@@ -47,8 +47,7 @@ Only a clean single press counts. Holding the key with anything else (another ke
 
 | Permission | Why |
 |---|---|
-| **Accessibility** | Watch for single key presses |
-| **Input Monitoring** | Read the 🌐 fn key |
+| **Input Monitoring** | Notice single key presses, including 🌐 fn. Asked when you assign your first key; listen-only, keys are never blocked or changed |
 | **Screen Recording** | Take screenshots; macOS asks on the first capture |
 
-Grant them in **System Settings → Privacy & Security**, then restart PrtScn. If you use fn, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
+Grant them in **System Settings → Privacy & Security**; no restart needed. If you use fn, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.

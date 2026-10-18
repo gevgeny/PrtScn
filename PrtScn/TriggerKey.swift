@@ -60,6 +60,7 @@ enum Bindings {
         }
         set {
             UserDefaults.standard.set(Dictionary(uniqueKeysWithValues: newValue.map { ($0.rawValue, $1.rawValue) }), forKey: "bindings")
+            KeyMonitor.start() // First assignment asks for Input Monitoring.
         }
     }
 }

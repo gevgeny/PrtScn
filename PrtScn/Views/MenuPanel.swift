@@ -1,9 +1,6 @@
 import ServiceManagement
 import SwiftUI
 
-// Solid background instead of glass, so window screenshots aren't grey. Flip to false for normal use.
-let screenshotMode = true
-
 // Menu bar panel content. A SwiftUI panel instead of NSMenu for grey hover rows,
 // toggles and picks that keep it open, and an animated accordion per key.
 struct MenuPanel: View {
@@ -14,9 +11,27 @@ struct MenuPanel: View {
     @State private var expanded: TriggerKey?
     @AppStorage("paused") private var paused = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var waitingForPermission = KeyMonitor.waitingForPermission
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if waitingForPermission {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("⛔️ PrtScn needs Input Monitoring to see key presses")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("Grant Input Monitoring…") {
+                        close()
+                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")!)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                separator
+            }
             Text("Tap a key to capture")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
@@ -53,7 +68,10 @@ struct MenuPanel: View {
         }
         .padding(6)
         .frame(width: 340)
-        .modifier(PanelBackground(opaque: screenshotMode))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .onReceive(NotificationCenter.default.publisher(for: KeyMonitor.stateChanged)) { _ in
+            withAnimation(.snappy(duration: 0.25)) { waitingForPermission = KeyMonitor.waitingForPermission }
+        }
     }
 
     private func keyRow(_ key: TriggerKey) -> some View {
@@ -100,21 +118,6 @@ struct MenuPanel: View {
 
     private var separator: some View {
         Divider().padding(.horizontal, 10).padding(.vertical, 4)
-    }
-}
-
-struct PanelBackground: ViewModifier {
-    let opaque: Bool
-
-    func body(content: Content) -> some View {
-        if opaque {
-            content
-                .background(Color(nsColor: .windowBackgroundColor), in: .rect(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.separator))
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 2)
-        } else {
-            content.glassEffect(.regular, in: .rect(cornerRadius: 16))
-        }
     }
 }
 
