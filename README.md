@@ -21,7 +21,10 @@
 Tap <kbd>🌐 fn</kbd>, or the left or right <kbd>⌃</kbd>, <kbd>⌥</kbd>, <kbd>⌘</kbd> or <kbd>⇧</kbd> on its own, and PrtScn runs the screenshot action you assigned to that key. It uses the built-in macOS `screencapture` tool, so files land where <kbd>⇧</kbd><kbd>⌘</kbd><kbd>3</kbd> puts them.
 
 <p align="center">
-  <img src="docs/menu.png" width="360" alt="PrtScn menu">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/menu-dark.png">
+    <img src="docs/menu-light.png" width="370" alt="PrtScn menu">
+  </picture>
 </p>
 
 Only a clean single press counts. Holding the key with anything else (another key, a modifier, a click, a scroll), or longer than a second, does nothing, so shortcuts like <kbd>⌥</kbd><kbd>⌘</kbd><kbd>X</kbd>, <kbd>fn</kbd><kbd>F1</kbd> or <kbd>⌃</kbd>-click keep working.
