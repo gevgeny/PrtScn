@@ -18,7 +18,7 @@
 
 ## How it works
 
-Tap <kbd>fn</kbd>, <kbd>⌥</kbd>, <kbd>Right ⌥</kbd>, <kbd>⌃</kbd> or <kbd>Right ⌃</kbd> on its own, and PrtScn runs the screenshot action you assigned to that key. It uses the built-in macOS `screencapture` tool, so files land where <kbd>⇧</kbd><kbd>⌘</kbd><kbd>3</kbd> puts them.
+Tap <kbd>🌐 fn</kbd>, <kbd>Lt ⌃</kbd>, <kbd>Lt ⌥</kbd>, <kbd>Rt ⌃</kbd> or <kbd>Rt ⌥</kbd> on its own, and PrtScn runs the screenshot action you assigned to that key. It uses the built-in macOS `screencapture` tool, so files land where <kbd>⇧</kbd><kbd>⌘</kbd><kbd>3</kbd> puts them.
 
 <p align="center">
   <img src="docs/menu.png" width="360" alt="PrtScn menu">
@@ -28,8 +28,8 @@ Only a clean single press counts. Holding the key with anything else (another ke
 
 ## Features
 
-- **Five actions**: save or copy the full screen, save or copy a selected area, or open Screenshot options
-- **Five keys**: Fn / Globe, Option, Right Option, Control, Right Control, each one assignable in the menu
+- **Five actions**: capture screen or area to file or clipboard, or **Record** (opens the macOS Screenshot toolbar)
+- **Five keys**: Fn / Globe, left and right Control, left and right Option, each with its own action
 - **Pause** without quitting
 - **Launch at login**
 
