@@ -28,7 +28,7 @@ Only a clean single press counts. Holding the key with anything else (another ke
 
 ## Features
 
-- **Five actions**: capture screen or area to file or clipboard, or **Record** (opens the macOS Screenshot toolbar)
+- **Eight actions**: capture screen or area to file or clipboard, **Capture area & edit** (opens the Markup editor), **Copy text from area** (on-device OCR), **Pick color** (copies `#RRGGBB`), or **Record** (opens the macOS Screenshot toolbar)
 - **Nine keys**: Fn / Globe, and left and right Control, Option, Command and Shift, each with its own action
 - **Pause** without quitting
 - **Launch at login**

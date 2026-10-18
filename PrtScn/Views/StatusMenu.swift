@@ -8,12 +8,35 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private var aboutWindow: NSWindow?
 
+    // For actions that report progress (OCR). One status menu per app.
+    static private(set) var current: StatusMenu?
+
     override init() {
         super.init()
+        Self.current = self
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
         updateIcon()
+    }
+
+    // Pulses the menu bar icon while a slow action runs.
+    var busy = false {
+        didSet {
+            guard let button = statusItem.button, busy != oldValue else { return }
+            button.wantsLayer = true
+            if busy {
+                let pulse = CABasicAnimation(keyPath: "opacity")
+                pulse.fromValue = 1
+                pulse.toValue = 0.3
+                pulse.duration = 0.5
+                pulse.autoreverses = true
+                pulse.repeatCount = .infinity
+                button.layer?.add(pulse, forKey: "busy")
+            } else {
+                button.layer?.removeAnimation(forKey: "busy")
+            }
+        }
     }
 
     private func updateIcon() {
