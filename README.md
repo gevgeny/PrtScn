@@ -11,7 +11,15 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-27%2B-blue?logo=apple&logoColor=white" alt="macOS 27+">
+  <img src="https://img.shields.io/badge/version-0.1.0-teal" alt="Version 0.1.0">
   <img src="https://img.shields.io/badge/Swift-AppKit%20%2B%20SwiftUI-orange?logo=swift&logoColor=white" alt="Swift">
+</p>
+
+<p align="center">
+  <a href="./builds/PrtScn.0.1.0.zip"><strong>Download v0.1.0</strong></a> ·
+  <a href="#features">Features</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#building-from-source">Build</a>
 </p>
 
 ---
@@ -36,12 +44,14 @@ Only a clean single press counts. Holding the key with anything else (another ke
 - **Pause** without quitting
 - **Launch at login**
 
-## Setup
+## Installation
 
-1. Build and run (see below). The icon appears in the menu bar.
-2. Allow PrtScn in **Privacy & Security → Accessibility** and **Input Monitoring**, then restart it.
-3. Allow **Screen Recording** when macOS asks on the first screenshot.
-4. If you use Fn, set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
+1. Download [**PrtScn v0.1.0**](./builds/PrtScn.0.1.0.zip) and unzip it. The app is signed with a Developer ID and notarized by Apple. Older builds are in [`builds`](./builds).
+2. Move **PrtScn.app** to `/Applications` and launch it. The icon appears in the menu bar.
+3. Allow PrtScn in **Privacy & Security → Accessibility** and **Input Monitoring**, then restart it.
+4. Allow **Screen Recording** when macOS asks on the first screenshot.
+5. Click the icon and pick an action for each key you want to use.
+6. If you use Fn, set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
 
 ## Building from source
 

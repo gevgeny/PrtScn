@@ -1,11 +1,11 @@
 import AppKit
-import ServiceManagement
 import SwiftUI
 
-// Native AppKit status menu. AppKit draws item images at their real size;
-// SwiftUI menus shrink item icons to ~15pt, which made the key badges unreadable.
-final class StatusMenu: NSObject, NSMenuDelegate {
+// Menu bar item. Opens MenuPanel in a borderless panel under the icon, using the macOS 27
+// expanded-interface API so the item highlights and tracks like a real menu.
+final class StatusMenu: NSObject, NSStatusItemExpandedInterfaceDelegate, NSWindowDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    private var panel: KeyPanel?
     private var aboutWindow: NSWindow?
 
     // For actions that report progress (OCR). One status menu per app.
@@ -14,10 +14,10 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     override init() {
         super.init()
         Self.current = self
-        let menu = NSMenu()
-        menu.delegate = self
-        statusItem.menu = menu
+        statusItem.expandedInterfaceDelegate = self
         updateIcon()
+        // Pause is stored in UserDefaults by the panel; keep the icon in sync.
+        NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: UserDefaults.didChangeNotification, object: nil)
     }
 
     // Pulses the menu bar icon while a slow action runs.
@@ -39,94 +39,56 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         }
     }
 
-    private func updateIcon() {
+    @objc private func updateIcon() {
         statusItem.button?.image = KeyMonitor.paused ? .menuBarIconPaused : .menuBarIcon
     }
 
-    // Rebuilt on every open so titles, checkmarks and badges are current.
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        let bindings = Bindings.all
-        // Header + arrow so rows read as key -> action settings, not commands.
-        menu.addItem(.sectionHeader(title: "Tap a key to capture"))
-        for key in TriggerKey.allCases {
-            let item = NSMenuItem(title: bindings[key]?.title ?? "Not set", action: nil, keyEquivalent: "")
-            item.image = key.badge
-            // macOS 27 hides menu item images unless asked.
-            item.preferredImageVisibility = .visible
-            let font = NSFont.menuFont(ofSize: 0)
-            let title = NSMutableAttributedString(string: "→  ", attributes: [.foregroundColor: NSColor.tertiaryLabelColor, .font: font])
-            title.append(NSAttributedString(string: bindings[key]?.title ?? "Not set", attributes: [
-                .foregroundColor: bindings[key] == nil ? NSColor.secondaryLabelColor : NSColor.labelColor,
-                .font: font,
-            ]))
-            item.attributedTitle = title
-            let submenu = NSMenu()
-            for action in Action.allCases.map(Optional.some) + [nil] {
-                let choice = NSMenuItem(title: action?.title ?? "None", action: #selector(pick(_:)), keyEquivalent: "")
-                choice.target = self
-                choice.representedObject = (key, action)
-                choice.state = bindings[key] == action ? .on : .off
-                submenu.addItem(choice)
-            }
-            item.submenu = submenu
-            menu.addItem(item)
-        }
-        menu.addItem(.separator())
-        menu.addItem(toggle("Pause", symbol: "pause.fill", on: KeyMonitor.paused, #selector(togglePause)))
-        menu.addItem(toggle("Launch at login", symbol: "power", on: SMAppService.mainApp.status == .enabled, #selector(toggleLogin)))
-        menu.addItem(.separator())
-        menu.addItem(item("About PrtScn", #selector(showAbout)))
-        menu.addItem(NSMenuItem(title: "Quit PrtScn", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+    func statusItem(_ statusItem: NSStatusItem, didBegin session: NSStatusItemExpandedInterfaceSession) {
+        showPanel()
     }
 
-    private func item(_ title: String, _ action: Selector) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
-        item.target = self
-        return item
+    func statusItemDidEndExpandedInterfaceSession(_ statusItem: NSStatusItem, animated: Bool) {
+        panel?.orderOut(nil)
+        panel = nil
     }
 
-    // Control Center style toggle: symbol in a circle, accent-filled when on.
-    private func toggle(_ title: String, symbol: String, on: Bool, _ action: Selector) -> NSMenuItem {
-        let item = item(title, action)
-        item.image = NSImage(size: NSSize(width: 26, height: 26), flipped: false) { rect in
-            // Drawn at display time, so the dynamic colors follow light/dark.
-            (on ? NSColor.controlAccentColor : NSColor.quaternaryLabelColor).setFill()
-            NSBezierPath(ovalIn: rect).fill()
-            let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
-                .applying(.init(paletteColors: [on ? .white : .labelColor]))
-            if let glyph = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config) {
-                glyph.draw(in: NSRect(x: (rect.width - glyph.size.width) / 2, y: (rect.height - glyph.size.height) / 2,
-                                      width: glyph.size.width, height: glyph.size.height))
-            }
-            return true
-        }
-        item.preferredImageVisibility = .visible
-        return item
+    private func close() {
+        if let session = statusItem.expandedInterfaceSession { session.cancel() } else { panel?.orderOut(nil) }
     }
 
-    @objc private func pick(_ sender: NSMenuItem) {
-        guard let (key, action) = sender.representedObject as? (TriggerKey, Action?) else { return }
-        var bindings = Bindings.all
-        bindings[key] = action
-        Bindings.all = bindings
-        print("[PrtScn] bindings -> \(bindings)")
+    private func showPanel() {
+        guard let buttonFrame = statusItem.button?.window?.frame,
+              let screen = statusItem.button?.window?.screen ?? NSScreen.main else { return }
+        // Fresh content on every open, so state (bindings, login item) is current.
+        let content = MenuPanel(close: { [weak self] in self?.close() }, showAbout: { [weak self] in self?.showAbout() })
+            // Room for the glass shadow; small top gap under the menu bar, like a native menu.
+            .padding(EdgeInsets(top: 4, leading: 12, bottom: 12, trailing: 12))
+            .frame(maxHeight: .infinity, alignment: .top)
+        let host = NSHostingView(rootView: content)
+        // Tall transparent panel down to the screen bottom: the accordion grows inside it without resizing the window.
+        let width = host.fittingSize.width
+        let top = buttonFrame.minY
+        let x = min(max(buttonFrame.minX - 12, screen.visibleFrame.minX), screen.visibleFrame.maxX - width)
+        let frame = NSRect(x: x, y: screen.visibleFrame.minY, width: width, height: top - screen.visibleFrame.minY)
+
+        let panel = KeyPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = false
+        panel.level = .popUpMenu
+        panel.delegate = self
+        panel.onCancel = { [weak self] in self?.close() }
+        panel.contentView = host
+        panel.makeKeyAndOrderFront(nil)
+        self.panel = panel
     }
 
-    @objc private func togglePause() {
-        UserDefaults.standard.set(!KeyMonitor.paused, forKey: "paused")
-        updateIcon()
-        print("[PrtScn] paused=\(KeyMonitor.paused)")
+    // Click outside (or anywhere that takes key) closes, like a menu.
+    func windowDidResignKey(_ notification: Notification) {
+        close()
     }
 
-    @objc private func toggleLogin() {
-        let on = SMAppService.mainApp.status != .enabled
-        print("[PrtScn] launchAtLogin -> \(on)")
-        do { try on ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister() }
-        catch { print("[PrtScn] login item failed: \(error)") }
-    }
-
-    @objc private func showAbout() {
+    private func showAbout() {
         if aboutWindow == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: AboutView()))
             window.title = "About PrtScn"
@@ -138,6 +100,13 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         NSApp.activate()
         aboutWindow?.makeKeyAndOrderFront(nil)
     }
+}
+
+// Borderless panels can't become key by default; we need key for Esc, ⌘Q and resign-to-close.
+final class KeyPanel: NSPanel {
+    var onCancel: (() -> Void)?
+    override var canBecomeKey: Bool { true }
+    override func cancelOperation(_ sender: Any?) { onCancel?() }
 }
 
 extension NSImage {
