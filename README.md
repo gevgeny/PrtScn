@@ -26,7 +26,9 @@
 
 ## How it works
 
-Tap <kbd>🌐 fn</kbd>, or the left or right <kbd>⌃</kbd>, <kbd>⌥</kbd>, <kbd>⌘</kbd> or <kbd>⇧</kbd> on its own, and PrtScn runs the screenshot action you assigned to that key. It uses the built-in macOS `screencapture` tool, so files land where <kbd>⇧</kbd><kbd>⌘</kbd><kbd>3</kbd> puts them.
+Tap <kbd>🌐 fn</kbd> or another modifier key on its own, and PrtScn runs the action you assigned to it. It uses the standard macOS screenshot tools you're already used to.
+
+Beyond screenshots, a key can also do a few handy screen tricks: pick the color of any pixel, copy the text from any area of the screen straight to the clipboard, or capture an area and jump right into Markup to annotate it.
 
 <p align="center">
   <picture>
