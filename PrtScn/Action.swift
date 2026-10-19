@@ -14,8 +14,8 @@ enum Action: String, CaseIterable {
         case .areaClipboard: "Capture area to clipboard"
         case .areaEdit: "Capture area & edit"
         case .areaText: "Copy text from area"
-        case .pickColor: "Pick color"
-        case .options: "Record"
+        case .pickColor: "Pick color to clipboard"
+        case .options: "Record screen…"
         }
     }
 
@@ -35,7 +35,8 @@ enum Action: String, CaseIterable {
             try? FileManager.default.removeItem(at: url)
             capture(["-i", url.path]) { Task { await Self.copyText(from: url) } }
         case .pickColor: Self.pickColor()
-        case .options: NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Screenshot.app"))
+        // ⇧⌘5 toolbar already in recording mode; macOS's menu bar stop button ends it.
+        case .options: capture(["-iUv", screenshotPaths(name: "Screen Recording", ext: "mov")[0]])
         }
     }
 
@@ -97,14 +98,14 @@ enum Action: String, CaseIterable {
     }
 
     // Same folder and naming as Cmd+Shift+3; one file per display.
-    private func screenshotPaths() -> [String] {
+    private func screenshotPaths(name prefix: String = "Screenshot", ext: String = "png") -> [String] {
         let dir = UserDefaults(suiteName: "com.apple.screencapture")?.string(forKey: "location")
             .map { NSString(string: $0).expandingTildeInPath }
             ?? NSHomeDirectory() + "/Desktop"
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
-        let name = "\(dir)/Screenshot \(f.string(from: Date()))"
-        return (1...max(NSScreen.screens.count, 1)).map { $0 == 1 ? "\(name).png" : "\(name) (\($0)).png" }
+        let name = "\(dir)/\(prefix) \(f.string(from: Date()))"
+        return (1...max(NSScreen.screens.count, 1)).map { $0 == 1 ? "\(name).\(ext)" : "\(name) (\($0)).\(ext)" }
     }
 }
 

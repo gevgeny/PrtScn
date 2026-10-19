@@ -9,8 +9,9 @@ enum KeyMonitor {
     static var pressed: TriggerKey?
     static var keyDownsAtPress: UInt32 = 0
     static var pressedAt: TimeInterval = 0
-    // Held longer than this = changed mind, no action (Karabiner's to_if_alone default).
-    static let timeout: TimeInterval = 1.0
+    // Held longer than this = changed mind, no action. Real taps take ~80–200 ms; Karabiner's
+    // to_if_alone default is 1 s, too forgiving for modifiers people also hold for shortcuts.
+    static let timeout: TimeInterval = 0.35
     static var hid: IOHIDManager?
     static var globeDown = false
 
@@ -32,7 +33,10 @@ enum KeyMonitor {
             Task { try? await Task.sleep(for: .seconds(2)); installTap() }
             return
         }
-        let types: [CGEventType] = [.flagsChanged, .keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown, .scrollWheel]
+        // Anything here while a key is held cancels the tap. Media/brightness keys (fn+F1, volume) are
+        // system-defined events, not keyDown, and don't bump the key-down counter; trackpad gestures neither.
+        let types: [CGEventType] = [.flagsChanged, .keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown, .scrollWheel,
+                                    systemDefined, gesture]
         let mask = types.reduce(CGEventMask(0)) { $0 | CGEventMask(1) << $1.rawValue }
         guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
                                           eventsOfInterest: mask, callback: { _, type, event, _ in
@@ -56,29 +60,58 @@ enum KeyMonitor {
             return
         }
         guard type == .flagsChanged, let e = NSEvent(cgEvent: cgEvent) else {
-            if pressed != nil { print("[PrtScn] interrupted by event type=\(type.rawValue)") }
+            // Never logs which key was typed, only that something happened.
+            if let pressed { print("[PrtScn] \(pressed) cancelled by \(describe(type))") }
             pressed = nil
             return
         }
         // Fn comes from HID when available; its flagsChanged may be suppressed or duplicated.
         if e.keyCode == TriggerKey.fnKeyCode && hid != nil { return }
-        guard let key = TriggerKey(keyCode: e.keyCode) else { pressed = nil; return } // Caps Lock etc.
+        guard let key = TriggerKey(keyCode: e.keyCode) else { // Caps Lock, right Control...
+            if let pressed { print("[PrtScn] \(pressed) cancelled by other modifier keyCode=\(e.keyCode)") }
+            pressed = nil
+            return
+        }
         changed(key, down: e.modifierFlags.rawValue & key.deviceMask != 0, flags: e.modifierFlags)
     }
 
     static func changed(_ key: TriggerKey, down: Bool, flags: NSEvent.ModifierFlags) {
         if down {
             let others = flags.intersection([.command, .option, .control, .shift, .function]).subtracting(key.family)
+            let previous = pressed
             pressed = pressed == nil && others.isEmpty ? key : nil
             keyDownsAtPress = keyDowns()
             pressedAt = ProcessInfo.processInfo.systemUptime
-            print("[PrtScn] \(key) down, armed=\(pressed != nil)")
+            let why = previous.map { "\($0) already held" } ?? (others.isEmpty ? "" : "other modifiers held \(others)")
+            print("[PrtScn] \(key) down, \(pressed != nil ? "armed" : "not armed: \(why)") flags=0x\(String(flags.rawValue, radix: 16))")
         } else if pressed == key {
             pressed = nil
-            let clean = keyDowns() == keyDownsAtPress && ProcessInfo.processInfo.systemUptime - pressedAt < timeout
+            let heldMs = Int((ProcessInfo.processInfo.systemUptime - pressedAt) * 1000)
+            let typed = keyDowns() &- keyDownsAtPress
             let action = Bindings.all[key]
-            print("[PrtScn] \(key) up, clean=\(clean) paused=\(paused) action=\(String(describing: action))")
-            if clean, !paused, let action { action.run() }
+            let verdict = typed > 0 ? "cancelled: \(typed) key-down(s) while held"
+                : heldMs >= Int(timeout * 1000) ? "cancelled: held too long"
+                : paused ? "skipped: paused"
+                : action == nil ? "skipped: no action"
+                : "fire \(action!)"
+            print("[PrtScn] \(key) up after \(heldMs) ms, \(verdict)")
+            if verdict.hasPrefix("fire"), let action { action.run() }
+        } else {
+            print("[PrtScn] \(key) up, not armed")
+        }
+    }
+
+    private static let systemDefined = CGEventType(rawValue: 14)! // NX_SYSDEFINED: media/brightness keys
+    private static let gesture = CGEventType(rawValue: 29)!       // NSEvent.EventType.gesture: trackpad
+
+    private static func describe(_ type: CGEventType) -> String {
+        switch type {
+        case .keyDown: "a key press"
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown: "a click"
+        case .scrollWheel: "scrolling"
+        case systemDefined: "a media/system key"
+        case gesture: "a trackpad gesture"
+        default: "event type \(type.rawValue)"
         }
     }
 
@@ -104,6 +137,7 @@ enum KeyMonitor {
             MainActor.assumeIsolated {
                 guard down != KeyMonitor.globeDown else { return }
                 KeyMonitor.globeDown = down
+                print("[PrtScn] fn (HID) \(down ? "down" : "up")")
                 KeyMonitor.changed(.fn, down: down, flags: NSEvent.modifierFlags)
             }
         }, nil)

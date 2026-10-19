@@ -33,11 +33,6 @@ struct MenuPanel: View {
                 .padding(.vertical, 6)
                 separator
             }
-            Text("Tap a key to capture")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
             ForEach(TriggerKey.allCases) { key in
                 keyRow(key)
                 if expanded == key {
@@ -107,7 +102,7 @@ struct MenuPanel: View {
 
     // Control Center style toggle: symbol in a circle, accent-filled when on.
     private func toggleRow(_ title: String, symbol: String, on: Bool, _ action: @escaping () -> Void) -> some View {
-        HoverRow(height: 36, action: action) {
+        HoverRow(action: action) {
             ZStack {
                 Circle().fill(on ? Color.accentColor : Color.primary.opacity(0.1))
                 Image(systemName: symbol)
@@ -126,7 +121,7 @@ struct MenuPanel: View {
 
 // Menu-style row: grey highlight on hover, whole row clickable.
 struct HoverRow<Content: View>: View {
-    var height: CGFloat = 28
+    var height: CGFloat = 34 // One height for every row.
     let action: () -> Void
     @ViewBuilder let content: Content
     @State private var hovering = false
@@ -144,17 +139,27 @@ struct HoverRow<Content: View>: View {
     }
 }
 
-// Outlined key cap, 40×20 like the native menu version.
+// Outlined key cap: glyph top-right, faint label bottom-left (Left/Right, or the globe on fn).
 struct KeyBadge: View {
     let key: TriggerKey
 
     var body: some View {
-        HStack(spacing: 3) {
-            if key == .fn { Image(systemName: "globe").font(.system(size: 10, weight: .semibold)) }
-            Text(key.symbol).font(.system(size: 11, weight: .semibold))
+        // Tight glyph-to-label gap; the label keeps its bottom margin.
+        VStack(spacing: -2) {
+            Text(key.glyph)
+                .font(.system(size: key == .fn ? 11 : 13, weight: .semibold))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            Group {
+                if key == .fn { Image(systemName: "globe").font(.system(size: 9, weight: .semibold)) }
+                else { Text(key.side ?? "").font(.system(size: 8, weight: .medium)) }
+            }
+            .opacity(0.5)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 40, height: 20)
-        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary, lineWidth: 1))
+        .padding(.horizontal, 5)
+        .padding(.bottom, 3)
+        .frame(width: 40, height: 28, alignment: .bottom)
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.primary, lineWidth: 1))
         // Softer than the action titles, brighter than "Not set".
         .opacity(0.7)
     }

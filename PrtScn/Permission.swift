@@ -69,7 +69,7 @@ enum Permission: CaseIterable {
 extension Action {
     var needsScreenRecording: Bool {
         switch self {
-        case .pickColor, .options: false // System loupe / Screenshot app handle it themselves.
+        case .pickColor: false // System loupe handles it itself.
         default: true
         }
     }

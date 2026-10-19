@@ -3,7 +3,8 @@ import AppKit
 enum TriggerKey: String, CaseIterable, Identifiable {
     // Raw values are persisted IDs.
     case fn = "Fn", ctrl = "Ctrl", opt = "Opt", cmd = "Cmd", shift = "Shift"
-    case rightCtrl = "R Ctrl", rightOpt = "R Opt", rightCmd = "R Cmd", rightShift = "R Shift"
+    // No right Control: Apple keyboards don't have one.
+    case rightOpt = "R Opt", rightCmd = "R Cmd", rightShift = "R Shift"
     var id: Self { self }
 
     static let fnKeyCode: UInt16 = 0x3F
@@ -14,7 +15,6 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         case 0x3A: self = .opt
         case 0x3D: self = .rightOpt
         case 0x3B: self = .ctrl
-        case 0x3E: self = .rightCtrl
         case 0x37: self = .cmd
         case 0x36: self = .rightCmd
         case 0x38: self = .shift
@@ -27,7 +27,7 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         switch self {
         case .fn: .function
         case .opt, .rightOpt: .option
-        case .ctrl, .rightCtrl: .control
+        case .ctrl: .control
         case .cmd, .rightCmd: .command
         case .shift, .rightShift: .shift
         }
@@ -40,7 +40,6 @@ enum TriggerKey: String, CaseIterable, Identifiable {
         case .opt: 0x20
         case .rightOpt: 0x40
         case .ctrl: 0x01
-        case .rightCtrl: 0x2000
         case .cmd: 0x08
         case .rightCmd: 0x10
         case .shift: 0x02
@@ -67,17 +66,22 @@ enum Bindings {
 }
 
 extension TriggerKey {
-    var symbol: String {
+    // Badge text: a small side word plus the key glyph.
+    var side: String? {
+        switch self {
+        case .fn: nil
+        case .ctrl, .opt, .cmd, .shift: "Left"
+        case .rightOpt, .rightCmd, .rightShift: "Right"
+        }
+    }
+
+    var glyph: String {
         switch self {
         case .fn: "fn"
-        case .ctrl: "Lt ⌃"
-        case .opt: "Lt ⌥"
-        case .cmd: "Lt ⌘"
-        case .shift: "Lt ⇧"
-        case .rightCtrl: "Rt ⌃"
-        case .rightOpt: "Rt ⌥"
-        case .rightCmd: "Rt ⌘"
-        case .rightShift: "Rt ⇧"
+        case .ctrl: "⌃"
+        case .opt, .rightOpt: "⌥"
+        case .cmd, .rightCmd: "⌘"
+        case .shift, .rightShift: "⇧"
         }
     }
 }

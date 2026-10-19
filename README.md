@@ -37,12 +37,12 @@ Beyond screenshots, a key can also do a few handy screen tricks: pick the color 
   </picture>
 </p>
 
-Only a clean single press counts. Holding the key with anything else (another key, a modifier, a click, a scroll), or longer than a second, does nothing, so shortcuts like <kbd>⌥</kbd><kbd>⌘</kbd><kbd>X</kbd>, <kbd>fn</kbd><kbd>F1</kbd> or <kbd>⌃</kbd>-click keep working.
+Only a clean single press counts. Holding the key with anything else (another key, a modifier, a click, a scroll), or for longer than a quick tap, does nothing, so shortcuts like <kbd>⌥</kbd><kbd>⌘</kbd><kbd>X</kbd>, <kbd>fn</kbd><kbd>F1</kbd> or <kbd>⌃</kbd>-click keep working.
 
 ## Features
 
-- **Eight actions**: capture screen or area to file or clipboard, **Capture area & edit** (opens the Markup editor), **Copy text from area** (on-device OCR), **Pick color** (copies `#RRGGBB`), or **Record** (opens the macOS Screenshot toolbar)
-- **Nine keys**: Fn / Globe, and left and right Control, Option, Command and Shift, each with its own action
+- **Eight actions**: capture screen or area to file or clipboard, **Capture area & edit** (opens the Markup editor), **Copy text from area** (on-device OCR), **Pick color to clipboard** (as `#RRGGBB`), or **Record screen…** (opens the macOS screenshot toolbar in recording mode)
+- **Eight keys**: Fn / Globe, Control, and left and right Option, Command and Shift, each with its own action
 - **Pause** without quitting
 - **Launch at login**
 
