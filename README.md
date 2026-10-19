@@ -13,6 +13,7 @@
   <img src="https://img.shields.io/badge/macOS-26%2B-blue?logo=apple&logoColor=white" alt="macOS 26+">
   <img src="https://img.shields.io/badge/version-0.1.2-teal" alt="Version 0.1.2">
   <img src="https://img.shields.io/badge/Swift-AppKit%20%2B%20SwiftUI-orange?logo=swift&logoColor=white" alt="Swift">
+  <a href="https://buymeacoffee.com/eugene.g"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 </p>
 
 <p align="center">
@@ -51,3 +52,7 @@ Only a clean single press counts. Holding the key with anything else (another ke
 | **Screen Recording** | Take screenshots; macOS asks on the first capture |
 
 Grant them in **System Settings → Privacy & Security**; no restart needed. If you use fn, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
+
+## Support
+
+PrtScn is free. If it saves you a few keystrokes, you can [buy me a coffee](https://buymeacoffee.com/eugene.g) ☕. Bugs and ideas: [open an issue](https://github.com/gevgeny/PrtScn/issues).

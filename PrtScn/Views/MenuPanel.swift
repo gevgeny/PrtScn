@@ -11,22 +11,23 @@ struct MenuPanel: View {
     @State private var expanded: TriggerKey?
     @AppStorage("paused") private var paused = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
-    @State private var waitingForPermission = KeyMonitor.waitingForPermission
+    @State private var missing = Permission.missing
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if waitingForPermission {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("⛔️ PrtScn needs Input Monitoring to see key presses")
+            if !missing.isEmpty {
+                HStack(spacing: 6) {
+                    Text("⛔️ Allow")
                         .font(.callout)
                         .foregroundStyle(.red)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Button("Grant Input Monitoring…") {
-                        close()
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")!)
+                    ForEach(missing, id: \.self) { permission in
+                        Button(permission.title) {
+                            close()
+                            permission.grant()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -69,8 +70,10 @@ struct MenuPanel: View {
         .padding(6)
         .frame(width: 340)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
-        .onReceive(NotificationCenter.default.publisher(for: KeyMonitor.stateChanged)) { _ in
-            withAnimation(.snappy(duration: 0.25)) { waitingForPermission = KeyMonitor.waitingForPermission }
+        // The panel doesn't activate the app, so controls would draw in their inactive (dimmed) style.
+        .environment(\.controlActiveState, .key)
+        .onReceive(NotificationCenter.default.publisher(for: Permission.changed)) { _ in
+            withAnimation(.snappy(duration: 0.25)) { missing = Permission.missing }
         }
     }
 

@@ -16,6 +16,19 @@ struct AboutView: View {
             Text("One key, one screenshot.").padding(.top, 6)
             Link("github.com/gevgeny/PrtScn", destination: URL(string: "https://github.com/gevgeny/PrtScn")!)
                 .font(.caption)
+            Link("Bugs & feedback", destination: URL(string: "https://github.com/gevgeny/PrtScn/issues")!)
+                .font(.caption)
+            // Buy Me a Coffee brand colors: yellow #FFDD00, black text.
+            Link(destination: URL(string: "https://buymeacoffee.com/eugene.g")!) {
+                Text("☕ Buy me a coffee")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 1, green: 0.867, blue: 0), in: .capsule)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 10)
         }
         .padding(24)
         .frame(width: 280)

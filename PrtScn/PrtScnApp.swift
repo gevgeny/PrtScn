@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             app.terminate()
         }
         statusMenu = StatusMenu()
+        Permission.requestMissing() // Keys assigned in an earlier run.
         KeyMonitor.start()
     }
 }

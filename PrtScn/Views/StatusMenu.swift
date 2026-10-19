@@ -7,6 +7,7 @@ final class StatusMenu: NSObject, NSWindowDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private var panel: KeyPanel?
     private var closedAt = Date.distantPast
+    private var lastMissing = Permission.missing
     private var aboutWindow: NSWindow?
 
     // For actions that report progress (OCR). One status menu per app.
@@ -24,7 +25,11 @@ final class StatusMenu: NSObject, NSWindowDelegate {
         updateIcon()
         // Pause is stored in UserDefaults by the panel; keep the icon in sync.
         NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: UserDefaults.didChangeNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: KeyMonitor.stateChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateIcon), name: Permission.changed, object: nil)
+        // Grants happen in System Settings with no callback; poll while something is missing.
+        Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
+            MainActor.assumeIsolated { StatusMenu.current?.checkPermissions() }
+        }
     }
 
     // Pulses the menu bar icon while a slow action runs.
@@ -46,8 +51,15 @@ final class StatusMenu: NSObject, NSWindowDelegate {
         }
     }
 
+    private func checkPermissions() {
+        let missing = Permission.missing
+        guard missing != lastMissing else { return }
+        NotificationCenter.default.post(name: Permission.changed, object: nil)
+    }
+
     @objc private func updateIcon() {
-        statusItem.button?.image = KeyMonitor.waitingForPermission ? .menuBarIconWarning
+        lastMissing = Permission.missing
+        statusItem.button?.image = !lastMissing.isEmpty ? .menuBarIconWarning
             : KeyMonitor.paused ? .menuBarIconPaused : .menuBarIcon
     }
 

@@ -16,20 +16,10 @@ enum KeyMonitor {
 
     static var tap: CFMachPort?
 
-    // A key is assigned but Input Monitoring isn't granted yet: menu shows a warning, icon a red dot.
-    static var waitingForPermission: Bool { tap == nil && !Bindings.all.isEmpty }
-    static let stateChanged = Notification.Name("KeyMonitorStateChanged")
-
-    // Starts on launch if any key is assigned, otherwise on the first assignment, so the
-    // Input Monitoring prompt shows only when it's needed. Safe to call repeatedly.
+    // Starts on launch if any key is assigned, otherwise on the first assignment.
+    // Permission prompts come from Permission.requestMissing. Safe to call repeatedly.
     static func start() {
-        // Every binding change lands here; refresh the warning (icon, menu) either way.
-        defer { NotificationCenter.default.post(name: stateChanged, object: nil) }
         guard tap == nil, !Bindings.all.isEmpty else { return }
-        if !CGPreflightListenEventAccess() {
-            print("[PrtScn] requesting Input Monitoring")
-            CGRequestListenEventAccess()
-        }
         installTap()
     }
 
@@ -57,7 +47,7 @@ enum KeyMonitor {
         CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, tap, 0), .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
         startGlobe()
-        NotificationCenter.default.post(name: stateChanged, object: nil)
+        NotificationCenter.default.post(name: Permission.changed, object: nil)
     }
 
     private static func handle(_ type: CGEventType, _ cgEvent: CGEvent) {
