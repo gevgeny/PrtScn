@@ -140,7 +140,7 @@ struct HoverRow<Content: View>: View {
 }
 
 // Key cap: glyph top-right, faint label bottom-left (Left/Right, or the globe on fn).
-// Unassigned: dimmed outline on a light grey fill. Assigned: bright outline, no fill.
+// Unassigned: dimmed outline on a light grey fill. Assigned: no fill, glyph and outline in the title color.
 struct KeyBadge: View {
     let key: TriggerKey
     var active = false

@@ -73,6 +73,7 @@ enum Action: String, CaseIterable {
             print("[PrtScn] color \(hex)")
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(hex, forType: .string)
+            Toast.show("\(hex) copied", swatch: c)
         }
     }
 
@@ -88,12 +89,14 @@ enum Action: String, CaseIterable {
         do {
             let lines = try await request.perform(on: url).compactMap { $0.topCandidates(1).first?.string }
             print("[PrtScn] ocr lines=\(lines.count)")
-            guard !lines.isEmpty else { return NSSound.beep() }
+            guard !lines.isEmpty else { return Toast.show("No text found", symbol: "text.magnifyingglass") }
+            let text = lines.joined(separator: "\n")
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+            NSPasteboard.general.setString(text, forType: .string)
+            Toast.show("Copied \(text.count) character\(text.count == 1 ? "" : "s")", symbol: "text.viewfinder")
         } catch {
             print("[PrtScn] ocr failed: \(error)")
-            NSSound.beep()
+            Toast.show("Couldn't read text", symbol: "exclamationmark.triangle")
         }
     }
 
