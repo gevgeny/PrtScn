@@ -74,7 +74,7 @@ struct MenuPanel: View {
 
     private func keyRow(_ key: TriggerKey) -> some View {
         HoverRow(action: { withAnimation(.snappy(duration: 0.25)) { expanded = expanded == key ? nil : key } }) {
-            KeyBadge(key: key)
+            KeyBadge(key: key, active: bindings[key] != nil)
             Text("→").foregroundStyle(.tertiary)
             Text(bindings[key]?.title ?? "Not set")
                 .foregroundStyle(bindings[key] == nil ? .secondary : .primary)
@@ -139,9 +139,11 @@ struct HoverRow<Content: View>: View {
     }
 }
 
-// Outlined key cap: glyph top-right, faint label bottom-left (Left/Right, or the globe on fn).
+// Key cap: glyph top-right, faint label bottom-left (Left/Right, or the globe on fn).
+// Unassigned: dimmed outline on a light grey fill. Assigned: bright outline, no fill.
 struct KeyBadge: View {
     let key: TriggerKey
+    var active = false
 
     var body: some View {
         // Tight glyph-to-label gap; the label keeps its bottom margin.
@@ -159,8 +161,9 @@ struct KeyBadge: View {
         .padding(.horizontal, 5)
         .padding(.bottom, 3)
         .frame(width: 40, height: 28, alignment: .bottom)
+        .background(active ? .clear : Color.primary.opacity(0.08), in: .rect(cornerRadius: 6))
         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.primary, lineWidth: 1))
-        // Softer than the action titles, brighter than "Not set".
-        .opacity(0.7)
+        // Unassigned: dimmed on grey, softer than the action titles; assigned: full brightness.
+        .opacity(active ? 1 : 0.7)
     }
 }
