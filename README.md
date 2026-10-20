@@ -33,7 +33,7 @@ Beyond screenshots, a key can also do a few handy screen tricks: pick the color 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/menu-dark.png">
-    <img src="docs/menu-light.png" width="370" alt="PrtScn menu">
+    <img src="docs/menu-light.png" width="600" alt="PrtScn menu">
   </picture>
 </p>
 

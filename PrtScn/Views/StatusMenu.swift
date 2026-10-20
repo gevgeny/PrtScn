@@ -7,6 +7,8 @@ final class StatusMenu: NSObject, NSWindowDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private var panel: KeyPanel?
     private var closedAt = Date.distantPast
+    // Transparent margin around the panel; the glass shadow is large and soft and is clipped at the window edge.
+    private static let shadowRoom: CGFloat = 50
     private var lastMissing = Permission.missing
     private var aboutWindow: NSWindow?
 
@@ -85,13 +87,13 @@ final class StatusMenu: NSObject, NSWindowDelegate {
         // Fresh content on every open, so state (bindings, login item) is current.
         let content = MenuPanel(close: { [weak self] in self?.close() }, showAbout: { [weak self] in self?.showAbout() })
             // Room for the glass shadow; small top gap under the menu bar, like a native menu.
-            .padding(EdgeInsets(top: 4, leading: 12, bottom: 12, trailing: 12))
+            .padding(EdgeInsets(top: 4, leading: Self.shadowRoom, bottom: Self.shadowRoom, trailing: Self.shadowRoom))
             .frame(maxHeight: .infinity, alignment: .top)
         let host = NSHostingView(rootView: content)
         // Tall transparent panel down to the screen bottom: the accordion grows inside it without resizing the window.
         let width = host.fittingSize.width
         let top = buttonFrame.minY
-        let x = min(max(buttonFrame.minX - 12, screen.visibleFrame.minX), screen.visibleFrame.maxX - width)
+        let x = min(max(buttonFrame.minX - Self.shadowRoom, screen.visibleFrame.minX), screen.visibleFrame.maxX - width)
         let frame = NSRect(x: x, y: screen.visibleFrame.minY, width: width, height: top - screen.visibleFrame.minY)
 
         let panel = KeyPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -104,6 +106,7 @@ final class StatusMenu: NSObject, NSWindowDelegate {
         panel.contentView = host
         panel.makeKeyAndOrderFront(nil)
         self.panel = panel
+        print("[PrtScn] panel frame=\(panel.frame) content=\(host.fittingSize) screen=\(screen.visibleFrame)")
         statusItem.button?.highlight(true) // macOS 27 does this itself; harmless there.
     }
 
