@@ -26,7 +26,7 @@
 
 ## How it works
 
-Tap <kbd>🌐 fn</kbd> or another modifier key on its own, and PrtScn runs the action you assigned to it. It uses the standard macOS screenshot tools you're already used to.
+Tap <kbd>🌐 fn</kbd> or another modifier key on its own, or press one of the MacBook top-row keys, and PrtScn runs the action you assigned to it. It uses the standard macOS screenshot tools you're already used to.
 
 Beyond screenshots, a key can also do a few handy screen tricks: pick the color of any pixel, copy the text from any area of the screen straight to the clipboard, or capture an area and jump right into Markup to annotate it.
 
@@ -37,12 +37,16 @@ Beyond screenshots, a key can also do a few handy screen tricks: pick the color 
   </picture>
 </p>
 
-Only a clean single press counts. Holding the key with anything else (another key, a modifier, a click, a scroll), or for longer than a quick tap, does nothing, so shortcuts like <kbd>⌥</kbd><kbd>⌘</kbd><kbd>X</kbd>, <kbd>fn</kbd><kbd>F1</kbd> or <kbd>⌃</kbd>-click keep working.
+For modifier keys, only a clean single tap counts. Holding the key with anything else (another key, a modifier, a click, a scroll), or for longer than a quick tap, does nothing, so shortcuts like <kbd>⌥</kbd><kbd>⌘</kbd><kbd>X</kbd>, <kbd>fn</kbd><kbd>F1</kbd> or <kbd>⌃</kbd>-click keep working. A tap right after typing is ignored too, so brushing a modifier mid-sentence doesn't take a screenshot.
+
+Top-row keys (<kbd>F1</kbd>–<kbd>F12</kbd> as pressed without fn: brightness, Mission Control, Spotlight, media, volume) fire on press and replace their usual action. Keys you leave on **Default** keep working as before, and so does any top-row key pressed with <kbd>⌘</kbd>, <kbd>⌥</kbd>, <kbd>⌃</kbd> or <kbd>⇧</kbd>. Assigning <kbd>F8</kbd> also stops it from launching Music.
 
 ## Features
 
 - **Eight actions**: capture screen or area to file or clipboard, **Capture area & edit** (opens the Markup editor), **Copy text from area** (on-device OCR), **Pick color to clipboard** (as `#RRGGBB`), or **Record screen…** (opens the macOS screenshot toolbar in recording mode)
-- **Eight keys**: Fn / Globe, Control, and left and right Option, Command and Shift, each with its own action
+- **21 keys**, each with its own action:
+  - **Modifiers**: Fn / Globe, left and right Control, Option, Command and Shift. Right Control shows as N/A unless a keyboard that has one is connected
+  - **Top row**: F1–F12, shown with their MacBook keycap symbols
 - **Pause** without quitting
 - **Launch at login**
 
@@ -50,7 +54,8 @@ Only a clean single press counts. Holding the key with anything else (another ke
 
 | Permission | Why |
 |---|---|
-| **Input Monitoring** | Notice single key presses, including 🌐 fn. Asked when you assign your first key; listen-only, keys are never blocked or changed |
+| **Input Monitoring** | Notice single key presses, including 🌐 fn. Asked when you assign your first key; listen-only, modifier keys are never blocked or changed |
+| **Accessibility** | Block the usual action of an assigned top-row key (brightness, volume…) so only yours runs. Asked when you assign your first F-key; not needed otherwise |
 | **Screen Recording** | Take screenshots; macOS asks on the first capture |
 
 Grant them in **System Settings → Privacy & Security**; no restart needed. If you use fn, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
