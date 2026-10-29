@@ -12,6 +12,11 @@ struct MenuPanel: View {
     @AppStorage("paused") private var paused = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var missing = Permission.missing
+    @State private var unavailable = Set(TriggerKey.allCases.filter { !$0.available })
+    // Three keys per row, like a keyboard: modifiers, then the top row in threes (F1–F3, F4–F6…).
+    private static let columns = 3
+    private static let rows: [[TriggerKey]] = [TriggerKey.allCases.filter { $0.media == nil }, TriggerKey.allCases.filter { $0.media != nil }]
+        .flatMap { group in stride(from: 0, to: group.count, by: columns).map { Array(group[$0..<min($0 + columns, group.count)]) } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -33,9 +38,14 @@ struct MenuPanel: View {
                 .padding(.vertical, 6)
                 separator
             }
-            ForEach(TriggerKey.allCases) { key in
-                keyRow(key)
-                if expanded == key {
+            ForEach(Self.rows, id: \.self) { row in
+                HStack(spacing: 0) {
+                    ForEach(row) { keyCell($0) }
+                    // Short last row keeps the column widths.
+                    ForEach(row.count..<Self.columns, id: \.self) { _ in Color.clear.frame(maxWidth: .infinity, maxHeight: 0) }
+                }
+                // Choices open full width under the row of the picked key.
+                if let key = expanded, row.contains(key) {
                     ForEach(Action.allCases.map(Optional.some) + [nil], id: \.self) { action in
                         choiceRow(key, action)
                     }
@@ -63,7 +73,7 @@ struct MenuPanel: View {
             .keyboardShortcut("q")
         }
         .padding(6)
-        .frame(width: 340)
+        .frame(width: 480)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
         // The panel doesn't activate the app, so controls would draw in their inactive (dimmed) style.
         .environment(\.controlActiveState, .key)
@@ -72,18 +82,21 @@ struct MenuPanel: View {
         }
     }
 
-    private func keyRow(_ key: TriggerKey) -> some View {
-        HoverRow(action: { withAnimation(.snappy(duration: 0.25)) { expanded = expanded == key ? nil : key } }) {
+    // Badge plus the action in up to two small lines; the open key stays highlighted.
+    // Unavailable keys show N/A and ignore the mouse, unless assigned (so it can still be cleared).
+    private func keyCell(_ key: TriggerKey) -> some View {
+        let na = unavailable.contains(key) && bindings[key] == nil
+        return HoverRow(height: 44, action: { withAnimation(.snappy(duration: 0.25)) { expanded = expanded == key ? nil : key } }) {
             KeyBadge(key: key, active: bindings[key] != nil)
-            Text("→").foregroundStyle(.tertiary)
-            Text(bindings[key]?.title ?? "Not set")
+            Text(na ? "N/A" : bindings[key]?.title ?? key.unsetTitle)
+                .font(.system(size: 11))
+                .lineLimit(2)
                 .foregroundStyle(bindings[key] == nil ? .secondary : .primary)
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(expanded == key ? 90 : 0))
         }
+        .background(expanded == key ? Color.primary.opacity(0.1) : .clear, in: .rect(cornerRadius: 8))
+        .opacity(na ? 0.4 : 1)
+        .allowsHitTesting(!na)
+        .frame(maxWidth: .infinity)
     }
 
     private func choiceRow(_ key: TriggerKey, _ action: Action?) -> some View {
@@ -96,7 +109,7 @@ struct MenuPanel: View {
                 .font(.system(size: 6))
                 .frame(width: 12)
                 .opacity(bindings[key] == action ? 1 : 0)
-            Text(action?.title ?? "None")
+            Text(action?.title ?? (key.media != nil ? "Default" : "None"))
         }
     }
 
@@ -119,6 +132,11 @@ struct MenuPanel: View {
     }
 }
 
+extension TriggerKey {
+    // Unassigned top-row keys keep their system action.
+    var unsetTitle: String { media != nil ? "Default" : "Not set" }
+}
+
 // Menu-style row: grey highlight on hover, whole row clickable.
 struct HoverRow<Content: View>: View {
     var height: CGFloat = 34 // One height for every row.
@@ -139,7 +157,7 @@ struct HoverRow<Content: View>: View {
     }
 }
 
-// Key cap: glyph top-right, faint label bottom-left (Left/Right, or the globe on fn).
+// Key cap: glyph top-right, faint label bottom-left (Left/Right, the globe on fn, F1… under a MacBook top-row symbol).
 // Unassigned: dimmed outline on a light grey fill. Assigned: no fill, glyph and outline in the title color.
 struct KeyBadge: View {
     let key: TriggerKey
@@ -148,9 +166,11 @@ struct KeyBadge: View {
     var body: some View {
         // Tight glyph-to-label gap; the label keeps its bottom margin.
         VStack(spacing: -2) {
-            Text(key.glyph)
-                .font(.system(size: key == .fn ? 11 : 13, weight: .semibold))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            Group {
+                if let media = key.media { Image(systemName: media.symbol).font(.system(size: 11, weight: .semibold)) }
+                else { Text(key.glyph).font(.system(size: key == .fn ? 11 : 13, weight: .semibold)) }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
             Group {
                 if key == .fn { Image(systemName: "globe").font(.system(size: 9, weight: .semibold)) }
                 else { Text(key.side ?? "").font(.system(size: 8, weight: .medium)) }

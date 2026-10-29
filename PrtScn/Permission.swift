@@ -3,7 +3,7 @@ import AppKit
 // Permissions the assigned keys need. Requested when a key that needs them is assigned,
 // not later on first use (e.g. Screen Recording on the first screenshot).
 enum Permission: CaseIterable {
-    case inputMonitoring, screenRecording
+    case inputMonitoring, accessibility, screenRecording
 
     // Posted when the set of missing permissions may have changed (icon, menu header refresh).
     static let changed = Notification.Name("PermissionChanged")
@@ -11,6 +11,7 @@ enum Permission: CaseIterable {
     var title: String {
         switch self {
         case .inputMonitoring: "Input Monitoring"
+        case .accessibility: "Accessibility"
         case .screenRecording: "Screen Recording"
         }
     }
@@ -19,6 +20,7 @@ enum Permission: CaseIterable {
     var granted: Bool {
         switch self {
         case .inputMonitoring: CGPreflightListenEventAccess()
+        case .accessibility: AXIsProcessTrusted()
         case .screenRecording: CGPreflightScreenCaptureAccess()
         }
     }
@@ -26,16 +28,19 @@ enum Permission: CaseIterable {
     var settingsURL: URL {
         let pane = switch self {
         case .inputMonitoring: "Privacy_ListenEvent"
+        case .accessibility: "Privacy_Accessibility"
         case .screenRecording: "Privacy_ScreenCapture"
         }
         return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!
     }
 
-    // Any key -> Input Monitoring; a capture action -> Screen Recording.
+    // Any key -> Input Monitoring; a top-row key -> Accessibility (to block its media action);
+    // a capture action -> Screen Recording.
     static var needed: [Permission] {
         let actions = Bindings.all.values
         var needed: [Permission] = []
         if !actions.isEmpty { needed.append(.inputMonitoring) }
+        if Bindings.all.keys.contains(where: { $0.media != nil }) { needed.append(.accessibility) }
         if actions.contains(where: \.needsScreenRecording) { needed.append(.screenRecording) }
         return needed
     }
@@ -49,6 +54,7 @@ enum Permission: CaseIterable {
         UserDefaults.standard.set(true, forKey: askedKey)
         switch self {
         case .inputMonitoring: CGRequestListenEventAccess()
+        case .accessibility: AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
         case .screenRecording: CGRequestScreenCaptureAccess()
         }
     }
