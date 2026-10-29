@@ -11,13 +11,13 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-26%2B-blue?logo=apple&logoColor=white" alt="macOS 26+">
-  <img src="https://img.shields.io/badge/version-0.1.6-teal" alt="Version 0.1.6">
+  <img src="https://img.shields.io/badge/version-0.2.5-teal" alt="Version 0.2.5">
   <img src="https://img.shields.io/badge/Swift-AppKit%20%2B%20SwiftUI-orange?logo=swift&logoColor=white" alt="Swift">
   <a href="https://buymeacoffee.com/eugene.g"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 </p>
 
 <p align="center">
-  <a href="./builds/PrtScn.0.1.6.zip"><strong>Download v0.1.6</strong></a> ·
+  <a href="./builds/PrtScn.0.2.5.zip"><strong>Download v0.2.5</strong></a> ·
   <a href="#features">Features</a> ·
   <a href="#permissions">Permissions</a>
 </p>
