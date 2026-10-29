@@ -10,6 +10,7 @@ final class StatusMenu: NSObject, NSWindowDelegate {
     // Transparent margin around the panel; the glass shadow is large and soft and is clipped at the window edge.
     private static let shadowRoom: CGFloat = 50
     private var lastMissing = Permission.missing
+    private var iconState = ""
     private var aboutWindow: NSWindow?
 
     // For actions that report progress (OCR). One status menu per app.
@@ -61,8 +62,13 @@ final class StatusMenu: NSObject, NSWindowDelegate {
 
     @objc private func updateIcon() {
         lastMissing = Permission.missing
-        statusItem.button?.image = !lastMissing.isEmpty ? .menuBarIconWarning
-            : KeyMonitor.paused ? .menuBarIconPaused : .menuBarIcon
+        let state = !lastMissing.isEmpty ? "warning" : KeyMonitor.paused ? "paused" : "normal"
+        // Any defaults write lands here, including the status bar saving its item position mid-layout;
+        // re-setting the same image then triggers a layout recursion warning. (Asset images are new
+        // instances per access, so compare the state, not the image.)
+        guard state != iconState else { return }
+        iconState = state
+        statusItem.button?.image = state == "warning" ? .menuBarIconWarning : state == "paused" ? .menuBarIconPaused : .menuBarIcon
     }
 
     // macOS 26: the click that closes the panel (resign key) also hits the button; don't reopen right away.
