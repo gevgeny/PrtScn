@@ -43,7 +43,15 @@ Top-row keys (<kbd>F1</kbd>–<kbd>F12</kbd> as pressed without fn: brightness, 
 
 ## Features
 
-- **Eight actions**: capture screen or area to file or clipboard, **Capture area & edit** (opens the Markup editor), **Copy text from area** (on-device OCR), **Pick color to clipboard** (as `#RRGGBB`), or **Record screen…** (opens the macOS screenshot toolbar in recording mode)
+What a key can do:
+
+- 📸 **Screenshots**, in several flavors: the whole screen or an area, saved to a file or copied to the clipboard, or an area opened straight in the Markup editor to annotate
+- 📝 **Text from the screen**: select an area and its text lands on the clipboard (on-device OCR)
+- 🎨 **Pixel color**: click any pixel to copy its color as `#RRGGBB`
+- 🎬 **Screen recording**: opens the macOS screenshot toolbar in recording mode
+
+And around it:
+
 - **21 keys**, each with its own action:
   - **Modifiers**: Fn / Globe, left and right Control, Option, Command and Shift. Right Control shows as N/A unless a keyboard that has one is connected
   - **Top row**: F1–F12, shown with their MacBook keycap symbols
