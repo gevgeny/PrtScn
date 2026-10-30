@@ -39,7 +39,7 @@ Beyond screenshots, a key can also do a few handy screen tricks: pick the color 
 
 For modifier keys, only a clean single tap counts. Holding the key with anything else (another key, a modifier, a click, a scroll), or for longer than a quick tap, does nothing, so shortcuts like <kbd>⌥</kbd><kbd>⌘</kbd><kbd>X</kbd>, <kbd>fn</kbd><kbd>F1</kbd> or <kbd>⌃</kbd>-click keep working. A tap right after typing is ignored too, so brushing a modifier mid-sentence doesn't take a screenshot.
 
-Top-row keys (<kbd>F1</kbd>–<kbd>F12</kbd> as pressed without fn: brightness, Mission Control, Spotlight, media, volume) fire on press and replace their usual action. Keys you leave on **Default** keep working as before, and so does any top-row key pressed with <kbd>⌘</kbd>, <kbd>⌥</kbd>, <kbd>⌃</kbd> or <kbd>⇧</kbd>. Assigning <kbd>F8</kbd> also stops it from launching Music.
+Top-row keys (<kbd>F1</kbd>–<kbd>F12</kbd> as pressed without <kbd>fn</kbd>: brightness, Mission Control, Spotlight, media, volume) fire on press and replace their usual action. Keys you leave on **Default** keep working as before, and so does any top-row key pressed with <kbd>⌘</kbd>, <kbd>⌥</kbd>, <kbd>⌃</kbd> or <kbd>⇧</kbd>. Assigning <kbd>F8</kbd> also stops it from launching Music.
 
 ## Features
 
@@ -53,8 +53,8 @@ What a key can do:
 And around it:
 
 - **21 keys**, each with its own action:
-  - **Modifiers**: Fn / Globe, left and right Control, Option, Command and Shift. Right Control shows as N/A unless a keyboard that has one is connected
-  - **Top row**: F1–F12, shown with their MacBook keycap symbols
+  - **Modifiers**: <kbd>🌐 fn</kbd>, and left and right <kbd>⌃ Control</kbd>, <kbd>⌥ Option</kbd>, <kbd>⌘ Command</kbd> and <kbd>⇧ Shift</kbd>. Right <kbd>⌃ Control</kbd> shows as N/A unless a keyboard that has one is connected
+  - **Top row**: <kbd>F1</kbd>–<kbd>F12</kbd>, shown with their MacBook keycap symbols
 - **Pause** without quitting
 - **Launch at login**
 
@@ -62,11 +62,11 @@ And around it:
 
 | Permission | Why |
 |---|---|
-| **Input Monitoring** | Notice single key presses, including 🌐 fn. Asked when you assign your first key; listen-only, modifier keys are never blocked or changed |
+| **Input Monitoring** | Notice single key presses, including <kbd>🌐 fn</kbd>. Asked when you assign your first key; listen-only, modifier keys are never blocked or changed |
 | **Accessibility** | Block the usual action of an assigned top-row key (brightness, volume…) so only yours runs. Asked when you assign your first F-key; not needed otherwise |
 | **Screen Recording** | Take screenshots; macOS asks on the first capture |
 
-Grant them in **System Settings → Privacy & Security**; no restart needed. If you use fn, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
+Grant them in **System Settings → Privacy & Security**; no restart needed. If you use <kbd>🌐 fn</kbd>, also set **System Settings → Keyboard → Press 🌐 key to** to **Do Nothing**.
 
 ## Support
 
