@@ -17,9 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="./builds/PrtScn.0.2.5.zip"><strong>Download v0.2.5</strong></a> ·
-  <a href="#features">Features</a> ·
-  <a href="#permissions">Permissions</a>
+  <a href="./builds/PrtScn.0.2.5.zip"><strong>Download v0.2.5</strong></a>
 </p>
 
 ---
