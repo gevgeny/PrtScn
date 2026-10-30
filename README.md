@@ -51,7 +51,7 @@ What a key can do:
 And around it:
 
 - **21 keys**, each with its own action:
-  - **Modifiers**: <kbd>🌐 fn</kbd>, and left and right <kbd>⌃ Control</kbd>, <kbd>⌥ Option</kbd>, <kbd>⌘ Command</kbd> and <kbd>⇧ Shift</kbd>. Right <kbd>⌃ Control</kbd> shows as N/A unless a keyboard that has one is connected
+  - **Modifiers**: <kbd>🌐 fn</kbd>, and left and right <kbd>⌃</kbd>, <kbd>⌥</kbd>, <kbd>⌘</kbd> and <kbd>⇧</kbd>. Right <kbd>⌃</kbd> shows as N/A unless a keyboard that has one is connected
   - **Top row**: <kbd>F1</kbd>–<kbd>F12</kbd>, shown with their MacBook keycap symbols
 - **Pause** without quitting
 - **Launch at login**
